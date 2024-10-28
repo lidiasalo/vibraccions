@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ondas Estáticas con Canvas</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #fff;
+        }
+
+        canvas {
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="waveCanvas" width="400" height="200"></canvas>
+
+    <script>
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuración inicial
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height;
+        const maxRadius = 130; // Radio máximo
+        const minRadius = 50;  // Radio mínimo
+        const numWaves = 25;   // Cantidad de ondas
+        const angleIncrement = Math.PI / numWaves; // Incremento de ángulo
+
+        // Colores para las ondas
+        const colors = [
+            '#32CD32', '#00FF00', '#FFD700', '#FF4500', '#FF6347', 
+            '#DA70D6', '#FF69B4', '#DA70D6', '#FF6347', '#FFD700',
+            '#FF4500', '#00FF00', '#32CD32', '#32CD32', '#00FF00', 
+            '#FFD700', '#FF4500', '#FF6347', '#DA70D6', '#FF69B4',
+            '#DA70D6', '#FF6347', '#FFD700', '#FF4500', '#00FF00'
+        ];
+
+        // Dibujar las ondas en un arco superior
+        function drawWaves() {
+            for (let i = 0; i < numWaves; i++) {
+                const angle = angleIncrement * i - Math.PI / 2; // Empieza en la parte superior
+                const heightFactor = Math.random() * 0.5 + 0.75; // Variación en la altura
+                const radius = minRadius + (maxRadius - minRadius) * heightFactor;
+
+                // Coordenadas finales de la línea (para crear una onda)
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY - radius * Math.sin(angle);
+
+                // Dibujar cada barra/onda
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY); // Inicia en el centro
+                ctx.lineTo(x, y);             // Línea hacia el borde
+                ctx.lineWidth = 4;            // Grosor de las líneas
+                ctx.strokeStyle = colors[i];  // Color de la línea
+                ctx.stroke();
+            }
+        }
+
+        drawWaves(); // Ejecutar la función de dibujo
+    </script>
+
+</body>
+</html>
