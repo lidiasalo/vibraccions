@@ -1,0 +1,42 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: #f0f0f0;
+    font-family: 'Lovemy';
+}
+
+
+@font-face {
+    font-family: 'Lovemy';
+    src: url('./fonts/lovemy.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+.name{
+    font-size: 15em;
+}
+
+
+.canvas-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Para que ocupe todo el ancho del viewport */
+}
+
+.wave-section {
+    width: 80%; /* El canvas ocupará el 80% del ancho de la pantalla */
+    margin: 10px 0;
+}
+
+canvas {
+    width: 100%;
+    height: 50vh; /* Ahora ocupamos el 50% de la altura del viewport */
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sound Wave Animation with Canvas and Audio</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: white;
+    }
+    canvas {
+      display: block;
+    }
+    @font-face {
+      font-family: 'Lovemy';
+      src: url('./fonts/lovemy.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="soundWaveCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('soundWaveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let audioContext, analyzer, source;
+    let dataArray, bufferLength;
+    let audio, audioPlaying = false;
+    let time = 0; // Para el movimiento suave de las ondas
+
+    const numWaves = 50;
+    let radius = 150;
+    const minWaveHeight = 10;
+    const maxWaveHeight = 50;
+
+    // Colores personalizados según la imagen proporcionada (degradado)
+    const colorArray = [
+      "#5DA399", "#7BB47A", "#A8BE56", "#D4A944", "#E88832", "#F05945"
+    ];
+
+    // Ajustar el tamaño del canvas al tamaño de la pantalla
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // Recalcular el radio de las ondas basándonos en el tamaño más pequeño (ancho o alto)
+      radius = Math.min(canvas.width, canvas.height) * 0.15; // El radio es un 15% del tamaño más pequeño
+    }
+
+    // Inicializar el audio al cargar
+    function initAudio() {
+      if (!audio) {
+        // Crear el elemento de audio y cargar una canción de internet
+        audio = new Audio('./assets/song.mp3');
+        audio.crossOrigin = "anonymous"; // Permitir el análisis de audio de origen cruzado
+        audio.loop = true;
+
+        // Crear el contexto de audio y analizar las frecuencias
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyzer = audioContext.createAnalyser();
+        analyzer.fftSize = 256;
+        source = audioContext.createMediaElementSource(audio);
+        source.connect(analyzer);
+        analyzer.connect(audioContext.destination);
+
+        bufferLength = analyzer.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+      }
+    }
+
+    // Función para alternar entre play y pause
+    function togglePlayPause() {
+      if (!audioPlaying) {
+        initAudio();
+        audio.play();
+        audioContext.resume().then(() => {
+          console.log("AudioContext resumed successfully");
+        });
+      } else {
+        audio.pause();
+      }
+      audioPlaying = !audioPlaying;
+    }
+
+    // Detectar clic en el texto
+    canvas.addEventListener('click', function(event) {
+      const mouseX = event.clientX;
+      const mouseY = event.clientY;
+
+      const textWidth = ctx.measureText('VibrAccions').width;
+      const textX = canvas.width / 2 - textWidth / 2;
+      const textY = canvas.height / 2 - 100;
+
+      if (mouseX > textX && mouseX < textX + textWidth && mouseY > textY - 50 && mouseY < textY + 50) {
+        togglePlayPause();
+      }
+    });
+
+    // Dibujar ondas para un semicirculo
+    function drawSemicircle(offsetX, offsetY, invert = false) {
+      if (analyzer) {
+        analyzer.getByteFrequencyData(dataArray); // Obtener datos de frecuencia de la música
+      }
+
+      for (let i = 0; i < numWaves; i++) {
+        const angle = invert ? Math.PI + (i / numWaves) * Math.PI : (i / numWaves) * Math.PI;
+        
+        // Movimiento suave adicional
+        const waveHeightFactor = i < numWaves / 2
+          ? 1 + (i / (numWaves / 2)) * 1.5
+          : 1 - ((i - numWaves / 2) / (numWaves / 2)) * 0.8;
+
+        // Suavidad adicional a las ondas
+        const frequency = dataArray ? dataArray[i] || 0 : 0; 
+        const baseWaveHeight = minWaveHeight + (frequency / 255) * maxWaveHeight * waveHeightFactor;
+        const waveHeight = baseWaveHeight + Math.sin(time + i * 0.1) * 10; // Añadir suavidad
+
+        const x1 = offsetX + Math.cos(angle) * radius;
+        const y1 = offsetY + Math.sin(angle) * radius;
+        const x2 = offsetX + Math.cos(angle) * (radius + waveHeight);
+        const y2 = offsetY + Math.sin(angle) * (radius + waveHeight);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = colorArray[Math.floor(i / (numWaves / colorArray.length))];
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+    }
+
+    // Dibujar el texto en el centro de manera responsive
+    function drawText() {
+      const fontSize = Math.min(canvas.width, canvas.height) * 0.2; // Tamaño de fuente responsive
+      ctx.font = `${fontSize}px Lovemy`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#000';
+      ctx.fillText('VibrAccions', canvas.width / 2, canvas.height / 2 + 20);
+    }
+
+    // Animar las ondas
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar el semicirculo superior desplazado a la derecha
+      drawSemicircle(canvas.width / 2 - 30, canvas.height / 2 + 20);
+
+      // Dibujar el semicirculo inferior alineado justo debajo del superior
+      drawSemicircle(canvas.width / 2 + 30, canvas.height / 2 - 20, true);
+
+      // Dibujar el texto en el centro
+      drawText();
+
+      time += 0.05; // Ajuste del tiempo para el movimiento suave
+
+      requestAnimationFrame(animate);
+    }
+
+    // Inicializar
+    resizeCanvas();
+    animate();
+
+    // Ajustar el canvas al cambiar el tamaño de la ventana
+    window.addEventListener('resize', resizeCanvas);
+
+  </script>
+</body>
+</html>
